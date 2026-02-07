@@ -24,9 +24,15 @@ export default function Home() {
             >
               지금 관찰 리포트 만들기
             </Link>
-            <div className="rounded-full border border-zinc-200 px-6 py-3 text-sm text-zinc-600">
-              의료 진단이 아닌 관찰 요약입니다.
-            </div>
+            <Link
+              className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-6 py-3 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-50"
+              href="/ui-prototype"
+            >
+              UI sample
+            </Link>
+          </div>
+          <div className="rounded-full border border-zinc-200 px-6 py-3 text-sm text-zinc-600 w-fit">
+            의료 진단이 아닌 관찰 요약입니다.
           </div>
         </header>
 
