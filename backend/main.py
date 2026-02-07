@@ -143,27 +143,28 @@ def extract_visual_observations(image_bytes: bytes, processor, model, device: st
 
     # Single focused prompt for skin observation (BLIP-2 supports conditional generation)
     prompt = """
-    역할:
-당신은 피부 관찰 보조 시스템입니다.
-이 이미지를 일반적인 장면 설명으로 설명하지 마세요.
-사람, 행동, 배경, 사물에 대해 설명하지 마세요.
-오직 피부만 분석하세요.
-피부가 보이지 않으면 “피부를 감지하지 못했습니다”라고만 출력하세요.
-규칙:
-- 출력 언어: 한국어
-- 출력 형식: JSON ONLY
+This is NOT an image captioning task.
+Do NOT describe the scene, people, actions, background, or objects.
 
-출력 (예시):
+Analyze ONLY visible skin.
+If no skin is visible, output exactly:
+"No visible skin detected."
+
+Role: Skin observation assistant.
+Rules: No medical diagnosis, no disease names, no treatments, no causes. Describe only visible features using cautious language.
+Format: JSON ONLY. chose the right option in the list for each category
+
+Output example:
 {
-  "시각적_관찰": {
-    "발적": "경미함",
-    "각질": "중간",
-    "부기": "없음",
-    "가려움_징후": "가능성 있음",
-    "거칠음": "뚜렷함"
+  "visual_observations":{
+    "redness":"none | mild | moderate | noticeable",
+    "scaling":"none | mild | moderate | noticeable",
+    "swelling":"none | mild | moderate | noticeable",
+    "itching_signs":"not observable | possibly suggested | not clear from image",
+    "roughness":"none | mild | moderate | noticeable"
   },
-  "요약": ["관찰된 피부 특징에 대한 짧고 중립적인 요약"],
-  "일반적_설명": ["이러한 시각적 특징이 일상적으로 의미하는 바에 대한 비의학적 설명"]
+  "summary":"Short neutral summary",
+  "general_explanation":"Non-medical explanation"
 }
 """
     inputs = processor(images=image, text=prompt, return_tensors="pt")
