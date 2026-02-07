@@ -96,6 +96,7 @@ const ko: Translations = {
     title: "추천 의료 서비스",
     bookAppointment: "예약하기",
     openInMaps: "지도에서 열기",
+    hospitalCount: "개 병원",
   },
 
   // ─── 현재 치료 카드 ───
