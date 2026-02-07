@@ -28,7 +28,7 @@ pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
-The first run downloads the BLIP-2 model (~2GB for base, ~31GB for xl). Default is `blip2-flan-t5-base` for Mac compatibility. Set `BLIP2_MODEL=Salesforce/blip2-flan-t5-xl` for the larger model.
+The first run downloads the BLIP-2 model (~10GB for xl). On Mac: uses float16 to halve memory. On CUDA: uses 8-bit quantization if `bitsandbytes` is installed.
 
 ### 2. Next.js frontend
 

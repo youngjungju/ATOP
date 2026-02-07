@@ -39,3 +39,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+backend/venv/*
+backend/venv
+backend/venv/
+backend/venv/bin/
+backend/venv/bin/activate
+backend/venv/bin/activate.csh
+backend/venv/bin/activate.fish
+backend/venv/bin/dotenv
+backend/venv/bin/python
+backend/venv/bin/python3
+backend/venv/bin/python3.10
+backend/venv/bin/python3.10-config
+backend/venv/bin/python3.10-config-3.10
+backend/venv/bin/python3.10-config-3.10-x86_64-linux-gnu
+backend/venv/bin/python3.10-config-3.10-x86_64-linux-gnu

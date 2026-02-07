@@ -50,28 +50,51 @@ class AnalysisRequest(BaseModel):
     duration: str = ""
 
 
-def get_device() -> str:
-    """Use MPS on Apple Silicon, else CPU. No CUDA."""
+def get_device() -> tuple[str, bool]:
+    """Return (device, use_cuda). MPS on Apple Silicon, CUDA if available, else CPU."""
     try:
         import torch
 
+        if torch.cuda.is_available():
+            return "cuda", True
         if torch.backends.mps.is_available():
-            return "mps"
-        return "cpu"
+            return "mps", False
+        return "cpu", False
     except Exception:
-        return "cpu"
+        return "cpu", False
 
 
 def load_model():
-    """Load BLIP-2 model once. Default: blip2-flan-t5-xl. Requires HF_TOKEN in .env if gated."""
+    """Load BLIP-2 model once. Quantized: 8-bit on CUDA, float16 on Mac (MPS/CPU)."""
+    import torch
     from transformers import AutoProcessor, Blip2ForConditionalGeneration
 
     model_name = os.getenv("BLIP2_MODEL", "Salesforce/blip2-flan-t5-xl")
     token = os.getenv("HF_TOKEN") or os.getenv("HUGGING_FACE_HUB_TOKEN")
-    device = get_device()
+    device, use_cuda = get_device()
 
     processor = AutoProcessor.from_pretrained(model_name, token=token)
-    model = Blip2ForConditionalGeneration.from_pretrained(model_name, token=token)
+
+    # 8-bit quantization: CUDA only (bitsandbytes), not supported on Mac
+    if use_cuda:
+        try:
+            model = Blip2ForConditionalGeneration.from_pretrained(
+                model_name,
+                token=token,
+                load_in_8bit=True,
+                device_map="auto",
+            )
+            model.eval()
+            return processor, model, device
+        except Exception:
+            pass  # Fall back to float16 if bitsandbytes unavailable
+
+    # Mac (MPS/CPU): float16 halves memory, supported on Apple Silicon
+    model = Blip2ForConditionalGeneration.from_pretrained(
+        model_name,
+        token=token,
+        torch_dtype=torch.float16,
+    )
     model = model.to(device)
     model.eval()
 
@@ -92,6 +115,22 @@ def get_model():
     )
 
 
+def _prepare_inputs(inputs: dict, device: str, model) -> dict:
+    """Move inputs to device; use float16 when model is half-precision (saves memory on Mac)."""
+    import torch
+
+    result = {}
+    for k, v in inputs.items():
+        if isinstance(v, torch.Tensor):
+            v = v.to(device)
+            if hasattr(model, "dtype") and model.dtype in (torch.float16, torch.bfloat16) and v.is_floating_point():
+                v = v.to(model.dtype)
+            result[k] = v
+        else:
+            result[k] = v
+    return result
+
+
 def extract_visual_observations(image_bytes: bytes, processor, model, device: str) -> list[str]:
     """
     Use BLIP-2 to get visual observations from the skin image.
@@ -103,9 +142,45 @@ def extract_visual_observations(image_bytes: bytes, processor, model, device: st
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
     # Single focused prompt for skin observation (BLIP-2 supports conditional generation)
-    prompt = "Question: What visible skin features, textures, or areas do you see in this image? Answer:"
+    prompt = """
+    You are a skin observation assistant.
+
+Your role is to carefully observe visible skin characteristics from an image
+and summarize them in a neutral, factual, and non-medical way.
+
+IMPORTANT RULES:
+- You must NOT provide a medical diagnosis.
+- You must NOT name diseases (e.g. eczema, atopic dermatitis, psoriasis).
+- You must NOT suggest treatments, medications, or actions.
+- You must NOT interpret causes as medical facts.
+- You must only describe what is visually observable or generally reported by the user.
+
+ALLOWED:
+- Describe redness, scaling, swelling, dryness, roughness, irritation.
+- Use cautious wording such as "appears", "may be present", "visually noticeable".
+- Provide a general, non-medical explanation of what such skin features usually represent in everyday terms.
+- Keep a calm, neutral, and reassuring tone.
+
+TASK:
+Analyze the provided skin image and generate a structured observation report.
+
+OUTPUT FORMAT (JSON ONLY):
+{
+  "visual_observations": {
+    "redness": "none | mild | moderate | noticeable",
+    "scaling": "none | mild | moderate | noticeable",
+    "swelling": "none | mild | moderate | noticeable",
+    "itching_signs": "not observable | possibly suggested | not clear from image",
+    "roughness": "none | mild | moderate | noticeable"
+  },
+  "summary": "Short neutral summary of visible skin characteristics",
+  "general_explanation": "High-level explanation of what these visible features generally indicate in non-medical terms",
+  "limitations": "What cannot be determined from an image alone",
+  "disclaimer": "This is not a medical diagnosis. This report is intended to support communication with a healthcare professional."
+}
+    """
     inputs = processor(images=image, text=prompt, return_tensors="pt")
-    inputs = {k: v.to(device) for k, v in inputs.items()}
+    inputs = _prepare_inputs(inputs, device, model)
 
     with torch.no_grad():
         out = model.generate(**inputs, max_new_tokens=80)
@@ -116,7 +191,7 @@ def extract_visual_observations(image_bytes: bytes, processor, model, device: st
     else:
         # Fallback: unconditional caption
         inputs = processor(images=image, return_tensors="pt")
-        inputs = {k: v.to(device) for k, v in inputs.items()}
+        inputs = _prepare_inputs(inputs, device, model)
         with torch.no_grad():
             out = model.generate(**inputs, max_new_tokens=80)
         caption = processor.decode(out[0], skip_special_tokens=True).strip()

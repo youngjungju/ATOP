@@ -9,3 +9,5 @@ Pillow>=10.0.0
 transformers>=4.45.0
 torch>=2.0.0
 accelerate>=0.33.0
+# Optional: bitsandbytes for 8-bit on CUDA only (not supported on Mac)
+# pip install bitsandbytes  # uncomment if using GPU
