@@ -1,41 +1,71 @@
-ATOP는 피부 사진과 복용 기록을 기반으로 시각적 특징을 관찰·요약해주는 웹 MVP입니다.
+# ATOP — Skin Observation Report (Hackathon MVP)
 
-## Getting Started
+A web app that generates an automatic skin condition report after a user uploads a photo and enters medical information. **Not a medical diagnostic tool** — outputs include a medical disclaimer and provide preliminary visual analysis only.
 
-### 1) 환경 변수 설정
+## Tech Stack
 
-`.env.local`에 아래 값을 채워주세요.
+- **Backend:** Python + FastAPI
+- **Vision model:** BLIP-2 (Hugging Face) — runs on Mac CPU or MPS, no CUDA
+- **Frontend:** Next.js 14 + React + Tailwind CSS
+- No paid APIs, no training or fine-tuning
 
+## Features
+
+1. User uploads a skin photo
+2. User enters: current medications, symptoms (itching, redness, pain, dryness, etc.), duration of symptoms
+3. Backend uses BLIP-2 to extract visual observations and combines them with user inputs into a structured report
+4. Frontend displays the final report with disclaimer
+
+## Getting Started (Local)
+
+### 1. Python backend
+
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate   # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
 ```
-SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
-SUPABASE_STORAGE_BUCKET=skin-images
-GEMINI_API_KEY=
-```
 
-Supabase Storage 버킷은 public으로 설정되어 있어야 합니다.
+The first run downloads the BLIP-2 model (~2GB for base, ~31GB for xl). Default is `blip2-flan-t5-base` for Mac compatibility. Set `BLIP2_MODEL=Salesforce/blip2-flan-t5-xl` for the larger model.
 
-### 2) 개발 서버 실행
+### 2. Next.js frontend
 
 ```bash
 npm install
 npm run dev
 ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### 3. Use the app
+
+1. Open [http://localhost:3000](http://localhost:3000)
+2. Go to **Upload** → add photo, medications, symptoms, duration
+3. Click **Generate Report**
+4. View the structured report
+
+## Screens
+
+- `/` — Landing page
+- `/upload` — Photo upload + medical info
+- `/report/[id]` — Observation report
+
+## Report format (JSON)
+
+```json
+{
+  "summary": "short neutral summary",
+  "visual_observations": ["list of visual findings"],
+  "user_reported_symptoms": ["list"],
+  "current_medications": ["list"],
+  "duration_of_symptoms": "string",
+  "possible_non_diagnostic_causes": ["examples"],
+  "general_advice": ["safe, non-medical advice"],
+  "disclaimer": "This is not medical advice..."
+}
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000)을 열면 랜딩 페이지를 확인할 수 있습니다.
+## Environment
 
-## 주요 화면
-
-- `/` 랜딩 페이지
-- `/upload` 이미지 업로드 + 복용 기록 입력
-- `/report/[id]` 관찰 리포트 결과
+- `BACKEND_URL` (optional): Backend base URL, defaults to `http://localhost:8000`
+- `BLIP2_MODEL` (optional): BLIP-2 model name, defaults to `Salesforce/blip2-flan-t5-base`

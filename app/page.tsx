@@ -58,10 +58,10 @@ export default function Home() {
         <section className="rounded-3xl border border-zinc-200 bg-white p-8">
           <h2 className="text-xl font-semibold">데모 흐름</h2>
           <ol className="mt-4 grid gap-3 text-sm text-zinc-600 md:grid-cols-2">
-            <li>1. 사진 업로드</li>
-            <li>2. 복용/사용 중인 약 입력</li>
-            <li>3. AI 시각적 관찰 요약 생성</li>
-            <li>4. 리포트 화면 확인</li>
+            <li>1. Upload skin photo</li>
+            <li>2. Enter medications, symptoms, duration</li>
+            <li>3. BLIP-2 visual analysis + report generation</li>
+            <li>4. View structured report with disclaimer</li>
           </ol>
           <p className="mt-6 text-xs text-zinc-500">
             본 서비스는 의료 진단이 아니며, 사진과 사용자 기록에 기반한 시각적

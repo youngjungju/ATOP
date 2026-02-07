@@ -1,0 +1,242 @@
+"""
+Skin Observation Report - FastAPI Backend
+Hackathon MVP: BLIP-2 vision + structured report generation.
+NOT a medical diagnostic tool. Output includes medical disclaimer.
+"""
+
+import io
+import os
+from pathlib import Path
+from typing import Any
+
+# Load .env from backend folder (for HF_TOKEN, BLIP2_MODEL, etc.)
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+# Lazy load heavy deps to speed up startup
+# Model loaded on first request
+
+app = FastAPI(
+    title="Skin Observation Report API",
+    description="Preliminary visual analysis - NOT medical diagnosis",
+    version="0.1.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Report schema for response
+DISCLAIMER = (
+    "This is not medical advice. This report is a preliminary visual analysis "
+    "only. Please consult a qualified healthcare provider for any medical concerns."
+)
+
+
+class AnalysisRequest(BaseModel):
+    """Request body for analysis (when not using form)."""
+
+    medications: str = ""
+    symptoms: str = ""
+    duration: str = ""
+
+
+def get_device() -> str:
+    """Use MPS on Apple Silicon, else CPU. No CUDA."""
+    try:
+        import torch
+
+        if torch.backends.mps.is_available():
+            return "mps"
+        return "cpu"
+    except Exception:
+        return "cpu"
+
+
+def load_model():
+    """Load BLIP-2 model once. Default: blip2-flan-t5-xl. Requires HF_TOKEN in .env if gated."""
+    from transformers import AutoProcessor, Blip2ForConditionalGeneration
+
+    model_name = os.getenv("BLIP2_MODEL", "Salesforce/blip2-flan-t5-xl")
+    token = os.getenv("HF_TOKEN") or os.getenv("HUGGING_FACE_HUB_TOKEN")
+    device = get_device()
+
+    processor = AutoProcessor.from_pretrained(model_name, token=token)
+    model = Blip2ForConditionalGeneration.from_pretrained(model_name, token=token)
+    model = model.to(device)
+    model.eval()
+
+    return processor, model, device
+
+
+# Global model cache (loaded on first request)
+_model_cache: dict[str, Any] = {}
+
+
+def get_model():
+    if not _model_cache:
+        _model_cache["processor"], _model_cache["model"], _model_cache["device"] = load_model()
+    return (
+        _model_cache["processor"],
+        _model_cache["model"],
+        _model_cache["device"],
+    )
+
+
+def extract_visual_observations(image_bytes: bytes, processor, model, device: str) -> list[str]:
+    """
+    Use BLIP-2 to get visual observations from the skin image.
+    VQA-style: ask what visible skin features are present.
+    """
+    import torch
+    from PIL import Image
+
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+
+    # Single focused prompt for skin observation (BLIP-2 supports conditional generation)
+    prompt = "Question: What visible skin features, textures, or areas do you see in this image? Answer:"
+    inputs = processor(images=image, text=prompt, return_tensors="pt")
+    inputs = {k: v.to(device) for k, v in inputs.items()}
+
+    with torch.no_grad():
+        out = model.generate(**inputs, max_new_tokens=80)
+
+    caption = processor.decode(out[0], skip_special_tokens=True).strip()
+    if caption and caption.lower() not in ("unknown", "n/a", ""):
+        observations = [caption]
+    else:
+        # Fallback: unconditional caption
+        inputs = processor(images=image, return_tensors="pt")
+        inputs = {k: v.to(device) for k, v in inputs.items()}
+        with torch.no_grad():
+            out = model.generate(**inputs, max_new_tokens=80)
+        caption = processor.decode(out[0], skip_special_tokens=True).strip()
+        observations = [caption] if caption else []
+
+    if not observations:
+        observations = ["Image received. Visual analysis may be limited by image quality or lighting."]
+
+    return observations
+
+
+def build_report(
+    visual_observations: list[str],
+    medications: str,
+    symptoms: str,
+    duration: str,
+) -> dict:
+    """
+    Build structured report from BLIP-2 observations + user inputs.
+    Uses cautious, non-diagnostic wording. No treatment advice.
+    """
+    user_symptoms = [s.strip() for s in symptoms.split(",") if s.strip()]
+    if not user_symptoms and symptoms.strip():
+        user_symptoms = [symptoms.strip()]
+
+    med_list = [m.strip() for m in medications.split(",") if m.strip()]
+    if not med_list and medications.strip():
+        med_list = [medications.strip()]
+
+    # Safe, generic possible causes - never diagnostic
+    possible_causes = [
+        "Environmental factors (dry air, allergens)",
+        "Skin barrier changes",
+        "Reaction to products or lifestyle factors",
+    ]
+    if duration:
+        possible_causes.append(f"Duration of {duration} - pattern may be consistent with various conditions")
+
+    # General safe advice - never treatment
+    general_advice = [
+        "Keep the area clean and moisturized.",
+        "Avoid known irritants if possible.",
+        "Consider tracking symptoms to share with a healthcare provider.",
+        "Seek professional evaluation for persistent or worsening symptoms.",
+    ]
+
+    summary_parts = []
+    if visual_observations:
+        summary_parts.append("Visual observations may be consistent with the described areas.")
+    if user_symptoms:
+        summary_parts.append(f"User-reported symptoms include: {', '.join(user_symptoms[:5])}.")
+    if duration:
+        summary_parts.append(f"Duration reported: {duration}.")
+    if med_list:
+        summary_parts.append("Current medications have been noted for provider context.")
+
+    summary = " ".join(summary_parts) if summary_parts else "Preliminary visual analysis completed."
+
+    return {
+        "summary": summary,
+        "visual_observations": visual_observations,
+        "user_reported_symptoms": user_symptoms,
+        "current_medications": med_list,
+        "duration_of_symptoms": duration,
+        "possible_non_diagnostic_causes": possible_causes,
+        "general_advice": general_advice,
+        "disclaimer": DISCLAIMER,
+    }
+
+
+@app.get("/")
+def root():
+    return {"status": "ok", "message": "Skin Observation Report API - not medical diagnosis"}
+
+
+@app.get("/health")
+def health():
+    return {"status": "healthy"}
+
+
+@app.post("/api/analyze")
+async def analyze_skin(
+    file: UploadFile = File(...),
+    medications: str = Form(""),
+    symptoms: str = Form(""),
+    duration: str = Form(""),
+):
+    """
+    Upload skin photo + medical info, get structured report.
+    NOT medical diagnosis - preliminary visual analysis only.
+    """
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Please upload an image file")
+
+    image_bytes = await file.read()
+    if len(image_bytes) > 10 * 1024 * 1024:  # 10MB
+        raise HTTPException(status_code=400, detail="Image too large (max 10MB)")
+
+    try:
+        processor, model, device = get_model()
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Model loading failed: {str(e)}. Ensure transformers/torch are installed.",
+        ) from e
+
+    try:
+        visual_observations = extract_visual_observations(image_bytes, processor, model, device)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Image analysis failed: {str(e)}",
+        ) from e
+
+    report = build_report(visual_observations, medications, symptoms, duration)
+
+    return report
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)
