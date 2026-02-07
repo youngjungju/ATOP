@@ -143,28 +143,29 @@ def extract_visual_observations(image_bytes: bytes, processor, model, device: st
 
     # Single focused prompt for skin observation (BLIP-2 supports conditional generation)
     prompt = """
-This is NOT an image captioning task.
-Do NOT describe the scene, people, actions, background, or objects.
-
-Analyze ONLY visible skin.
-If no skin is visible, output exactly:
+This is NOT a captioning task. Do NOT describe the scene, people, or objects.
+Analyze ONLY visible skin. If no skin is visible, output exactly:
 "No visible skin detected."
 
 Role: Skin observation assistant.
-Rules: No medical diagnosis, no disease names, no treatments, no causes. Describe only visible features using cautious language.
-Format: JSON ONLY. chose the right option in the list for each category
+Rules: No diagnosis, no disease names, no treatments, no causes.
+Use cautious language. Language: English. Format: JSON ONLY.
 
-Output example:
+Values rule:
+Use ONLY one of: none, mild, moderate, noticeable.
+For itching_signs use: not observable, possibly suggested, not clear from image.
+
+Output:
 {
   "visual_observations":{
-    "redness":"none | mild | moderate | noticeable",
-    "scaling":"none | mild | moderate | noticeable",
-    "swelling":"none | mild | moderate | noticeable",
-    "itching_signs":"not observable | possibly suggested | not clear from image",
-    "roughness":"none | mild | moderate | noticeable"
+    "redness":"",
+    "scaling":"",
+    "swelling":"",
+    "itching_signs":"",
+    "roughness":""
   },
-  "summary":"Short neutral summary",
-  "general_explanation":"Non-medical explanation"
+  "summary":"",
+  "general_explanation":""
 }
 """
     inputs = processor(images=image, text=prompt, return_tensors="pt")
