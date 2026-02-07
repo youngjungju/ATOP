@@ -94,6 +94,7 @@ const en = {
     title: "Recommended Care",
     bookAppointment: "Book Appointment",
     openInMaps: "Open in Maps",
+    hospitalCount: "hospitals",
   },
 
   // ─── Active Treatment Card ───
