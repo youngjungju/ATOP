@@ -83,7 +83,6 @@ def load_model():
                 token=token,
                 load_in_8bit=True,
                 device_map="auto",
-                tie_word_embeddings=False,
             )
             model.eval()
             return processor, model, device
@@ -95,7 +94,6 @@ def load_model():
         model_name,
         token=token,
         torch_dtype=torch.float16,
-        tie_word_embeddings=False,
     )
     model = model.to(device)
     model.eval()
