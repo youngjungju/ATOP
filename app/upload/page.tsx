@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/lib/i18n";
 
-// Symptoms options for structured input
-const SYMPTOM_OPTIONS = [
+// Symptom keys (used for form values sent to the API)
+const SYMPTOM_KEYS = [
   "itching",
   "redness",
   "pain",
@@ -14,10 +15,11 @@ const SYMPTOM_OPTIONS = [
   "burning",
   "tenderness",
   "other",
-];
+] as const;
 
 export default function UploadPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [file, setFile] = useState<File | null>(null);
   const [medications, setMedications] = useState("");
   const [symptoms, setSymptoms] = useState<string[]>([]);
@@ -25,6 +27,31 @@ export default function UploadPage() {
   const [duration, setDuration] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Pick up a file pre-selected from the home page
+  useEffect(() => {
+    try {
+      const pending = sessionStorage.getItem("pending-upload");
+      if (!pending) return;
+      sessionStorage.removeItem("pending-upload");
+
+      const { name, type, data } = JSON.parse(pending) as {
+        name: string;
+        type: string;
+        data: string;
+      };
+
+      // Convert base64 data URL back to a File object
+      fetch(data)
+        .then((res) => res.blob())
+        .then((blob) => {
+          const restored = new File([blob], name, { type });
+          setFile(restored);
+        });
+    } catch {
+      // Ignore malformed data – user can still pick a file manually
+    }
+  }, []);
 
   const previewUrl = useMemo(
     () => (file ? URL.createObjectURL(file) : null),
@@ -39,6 +66,8 @@ export default function UploadPage() {
     };
   }, [previewUrl]);
 
+  const symptomLabels = t.upload.symptoms;
+
   const toggleSymptom = (s: string) => {
     setSymptoms((prev) =>
       prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
@@ -47,7 +76,7 @@ export default function UploadPage() {
 
   const handleSubmit = async () => {
     if (!file) {
-      setErrorMessage("Please upload a skin photo first.");
+      setErrorMessage(t.upload.errorNoPhoto);
       return;
     }
 
@@ -114,17 +143,16 @@ export default function UploadPage() {
     <div className="min-h-screen bg-zinc-50">
       <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-12">
         <header className="space-y-2">
-          <h1 className="text-2xl font-semibold">Skin Observation Report</h1>
+          <h1 className="text-2xl font-semibold">{t.upload.title}</h1>
           <p className="text-sm text-zinc-600">
-            Upload a photo and enter your info. AI will generate a preliminary
-            visual analysis (not medical diagnosis).
+            {t.upload.subtitle}
           </p>
         </header>
 
         <section className="grid gap-6 md:grid-cols-[1.2fr_1fr]">
           <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
             <h2 className="text-sm font-semibold text-zinc-700">
-              Skin Photo Upload
+              {t.upload.photoSection}
             </h2>
             <label className="mt-4 flex h-56 cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-zinc-300 bg-zinc-50 text-sm text-zinc-500">
               <input
@@ -133,7 +161,7 @@ export default function UploadPage() {
                 className="hidden"
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />
-              <span>Click to select an image</span>
+              <span>{t.upload.photoPrompt}</span>
               {file && <span className="text-xs">{file.name}</span>}
             </label>
             {previewUrl && (
@@ -150,13 +178,13 @@ export default function UploadPage() {
           <div className="space-y-6">
             <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
               <h2 className="text-sm font-semibold text-zinc-700">
-                Current Medications
+                {t.upload.medicationsTitle}
               </h2>
               <p className="mt-2 text-xs text-zinc-500">
-                List any medications or topical products (comma-separated).
+                {t.upload.medicationsHint}
               </p>
               <textarea
-                placeholder="e.g. Moisturizer, antihistamine"
+                placeholder={t.upload.medicationsPlaceholder}
                 value={medications}
                 onChange={(e) => setMedications(e.target.value)}
                 className="mt-3 w-full resize-none rounded-lg border border-zinc-200 px-3 py-2 text-sm"
@@ -165,12 +193,12 @@ export default function UploadPage() {
             </div>
 
             <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-              <h2 className="text-sm font-semibold text-zinc-700">Symptoms</h2>
+              <h2 className="text-sm font-semibold text-zinc-700">{t.upload.symptomsTitle}</h2>
               <p className="mt-2 text-xs text-zinc-500">
-                Select any that apply (optional).
+                {t.upload.symptomsHint}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {SYMPTOM_OPTIONS.map((s) => (
+                {SYMPTOM_KEYS.map((s) => (
                   <button
                     key={s}
                     type="button"
@@ -181,13 +209,13 @@ export default function UploadPage() {
                         : "border border-zinc-200 bg-white text-zinc-600"
                     }`}
                   >
-                    {s}
+                    {symptomLabels[s]}
                   </button>
                 ))}
               </div>
               <input
                 type="text"
-                placeholder="Other (describe)"
+                placeholder={t.upload.symptomOtherPlaceholder}
                 value={symptomOther}
                 onChange={(e) => setSymptomOther(e.target.value)}
                 className="mt-3 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
@@ -196,11 +224,11 @@ export default function UploadPage() {
 
             <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
               <h2 className="text-sm font-semibold text-zinc-700">
-                Duration of Symptoms
+                {t.upload.durationTitle}
               </h2>
               <input
                 type="text"
-                placeholder="e.g. 2 weeks, few days"
+                placeholder={t.upload.durationPlaceholder}
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 className="mt-3 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
@@ -211,8 +239,7 @@ export default function UploadPage() {
 
         <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
           <p className="text-xs text-zinc-500">
-            This report is not medical advice. It provides a preliminary visual
-            analysis only. Always consult a healthcare provider.
+            {t.upload.disclaimer}
           </p>
           {errorMessage && (
             <p className="mt-3 text-sm text-red-500">{errorMessage}</p>
@@ -223,7 +250,7 @@ export default function UploadPage() {
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Generating report..." : "Generate Report"}
+            {isSubmitting ? t.upload.submitting : t.upload.submit}
           </button>
         </section>
       </main>

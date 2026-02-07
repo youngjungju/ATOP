@@ -1,7 +1,46 @@
-import Link from "next/link";
+"use client";
+
+import { useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Shield, Upload, Lock, CircleCheckBig, MessageCircleHeart } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
+
+const ACCEPTED_TYPES = "image/heic,image/heif,image/png,image/jpg,image/jpeg";
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export default function Home() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  const { t } = useTranslation();
+
+  const handleCardClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      alert(t.home.fileTooLarge);
+      return;
+    }
+
+    // Convert file to base64 and store in sessionStorage so the upload page
+    // can pick it up and pre-populate the preview.
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      sessionStorage.setItem("pending-upload", JSON.stringify({
+        name: file.name,
+        type: file.type,
+        data: base64,
+      }));
+      router.push("/upload");
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <section className="hero-bg px-4 py-20">
       {/* Background decorative shapes */}
@@ -12,28 +51,35 @@ export default function Home() {
         {/* Badge */}
         <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-700">
           <Shield className="h-4 w-4" />
-          AI-Powered Skin Care Support
+          {t.home.badge}
         </div>
 
         {/* Heading */}
         <h1 className="mb-6 text-4xl font-bold tracking-tight text-slate-900 md:text-6xl">
-          Clearer skin starts with
+          {t.home.headingLine1}
           <br />
-          <span className="text-emerald-600">understanding.</span>
+          <span className="text-emerald-600">{t.home.headingLine2}</span>
         </h1>
 
         {/* Subtitle */}
         <p className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-slate-600 md:text-xl">
-          Take a clear photo of your skin concern for a detailed analysis and
-          supportive report. We&rsquo;re here to help you manage your journey
-          with confidence.
+          {t.home.subtitle}
         </p>
 
         {/* Upload CTA Card */}
         <div className="mx-auto max-w-md">
-          <Link
-            href="/upload"
-            className="upload-card block cursor-pointer rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-white/80 p-8 backdrop-blur-sm transition-colors hover:border-emerald-400 md:p-12"
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED_TYPES}
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <button
+            type="button"
+            onClick={handleCardClick}
+            className="upload-card block w-full cursor-pointer rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-white/80 p-8 backdrop-blur-sm transition-colors hover:border-emerald-400 md:p-12"
           >
             <div className="flex flex-col items-center">
               {/* Pulsing upload icon */}
@@ -42,32 +88,32 @@ export default function Home() {
               </div>
 
               <h3 className="mb-2 text-xl font-semibold text-slate-800">
-                Upload a Photo
+                {t.home.uploadTitle}
               </h3>
               <p className="mb-6 text-sm text-slate-500">
-                JPEG, PNG or HEIC files up to 10MB
+                {t.home.uploadHint}
               </p>
 
               <span className="inline-block rounded-full bg-emerald-600 px-8 py-3 font-semibold text-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700">
-                Get Started
+                {t.home.getStarted}
               </span>
             </div>
-          </Link>
+          </button>
         </div>
 
         {/* Trust Markers */}
         <div className="mt-16 flex flex-wrap justify-center gap-8 text-sm text-slate-400">
           <div className="flex items-center gap-2">
             <Lock className="h-5 w-5" />
-            Secure &amp; Private
+            {t.home.trustSecure}
           </div>
           <div className="flex items-center gap-2">
             <CircleCheckBig className="h-5 w-5" />
-            Instant Results
+            {t.home.trustInstant}
           </div>
           <div className="flex items-center gap-2">
             <MessageCircleHeart className="h-5 w-5" />
-            Patient-First Design
+            {t.home.trustPatient}
           </div>
         </div>
       </div>

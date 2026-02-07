@@ -1,12 +1,14 @@
 "use client";
 
 import React from 'react';
+import { useTranslation } from '@/lib/i18n';
 
 interface ConfidenceBadgeProps {
   percentage: number;
 }
 
 const ConfidenceBadge = ({ percentage }: ConfidenceBadgeProps) => {
+  const { t } = useTranslation();
   const isHigh = percentage > 80;
   return (
     <span
@@ -16,7 +18,7 @@ const ConfidenceBadge = ({ percentage }: ConfidenceBadgeProps) => {
           : 'bg-amber-100 text-amber-600'
       }`}
     >
-      {percentage}% Match
+      {percentage}% {t.confidence.match}
     </span>
   );
 };

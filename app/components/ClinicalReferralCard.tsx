@@ -4,10 +4,14 @@ import React from 'react';
 import { MapPin, Calendar, Navigation } from 'lucide-react';
 import FadeInCard from './FadeInCard';
 import { DIAGNOSIS_DATA } from './mockData';
+import { useTranslation } from '@/lib/i18n';
 
-const ClinicalReferralCard = () => (
+const ClinicalReferralCard = () => {
+  const { t } = useTranslation();
+
+  return (
   <FadeInCard delay={0.3}>
-    <h2 className="text-sm font-bold text-gray-400 uppercase mb-5 tracking-tight">Recommended Care</h2>
+    <h2 className="text-sm font-bold text-gray-400 uppercase mb-5 tracking-tight">{t.clinicalReferral.title}</h2>
     <div className="mb-4">
       <h3 className="text-lg font-bold text-gray-800">{DIAGNOSIS_DATA.referral.doctor}</h3>
       <div className="flex items-center gap-1 text-gray-500">
@@ -34,13 +38,14 @@ const ClinicalReferralCard = () => (
     </div>
     <div className="flex flex-col gap-2">
       <button className="w-full py-4 bg-[#4A90E2] text-white rounded-[8px] font-bold shadow-lg shadow-blue-200 hover:bg-blue-600 transition-all flex items-center justify-center gap-2">
-        <Calendar size={18} /> Book Appointment
+        <Calendar size={18} /> {t.clinicalReferral.bookAppointment}
       </button>
       <button className="w-full py-4 bg-white text-[#4A90E2] border-2 border-[#4A90E2] rounded-[8px] font-bold hover:bg-blue-50 transition-all flex items-center justify-center gap-2">
-        <Navigation size={18} /> Open in Maps
+        <Navigation size={18} /> {t.clinicalReferral.openInMaps}
       </button>
     </div>
   </FadeInCard>
-);
+  );
+};
 
 export default ClinicalReferralCard;

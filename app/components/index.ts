@@ -9,4 +9,5 @@ export { default as SymptomBreakdownCard } from './SymptomBreakdownCard';
 export { default as ClinicalReferralCard } from './ClinicalReferralCard';
 export { default as FloatingSearchButton } from './FloatingSearchButton';
 export { default as BottomSheetDialog } from './BottomSheetDialog';
+export { default as LanguageToggle } from './LanguageToggle';
 export { DIAGNOSIS_DATA } from './mockData';

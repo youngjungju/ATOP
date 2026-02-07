@@ -4,6 +4,7 @@ import React from 'react';
 import { Bell, CheckCircle2, Pill, FlaskConical } from 'lucide-react';
 import FadeInCard from './FadeInCard';
 import { DIAGNOSIS_DATA } from './mockData';
+import { useTranslation } from '@/lib/i18n';
 
 interface ActiveTreatmentCardProps {
   reminders: Record<number, boolean>;
@@ -16,13 +17,15 @@ interface ActiveTreatmentCardProps {
 }
 
 const ActiveTreatmentCard = ({ reminders, onToggleReminder, medications }: ActiveTreatmentCardProps) => {
+  const { t } = useTranslation();
+
   // If medications are provided, map them to the display format
   // Otherwise use the mock data
   const treatmentsToDisplay = medications && medications.length > 0 
     ? medications.map((med, index) => ({
         id: index + 1,
         name: med.name,
-        dosage: `${med.type === 'oral' ? 'Pill' : 'Topical'} • ${med.time === 'morning' ? 'Morning' : 'Evening'}`,
+        dosage: `${med.type === 'oral' ? t.activeTreatment.pill : t.activeTreatment.topical} • ${med.time === 'morning' ? t.activeTreatment.morning : t.activeTreatment.evening}`,
         icon: med.type === 'oral' ? <Pill size={20} /> : <FlaskConical size={20} />
       }))
     : DIAGNOSIS_DATA.treatments;
@@ -30,7 +33,7 @@ const ActiveTreatmentCard = ({ reminders, onToggleReminder, medications }: Activ
   return (
     <FadeInCard delay={0}>
       <div className="bg-[#F0F7FF] -m-6 p-6 rounded-[16px]">
-        <h2 className="text-sm font-bold text-gray-400 uppercase mb-5 tracking-tight">Active Treatment</h2>
+        <h2 className="text-sm font-bold text-gray-400 uppercase mb-5 tracking-tight">{t.activeTreatment.title}</h2>
         <div className="space-y-3">
           {treatmentsToDisplay.map((item) => (
             <div key={item.id} className="bg-white p-4 rounded-[12px] flex items-center justify-between shadow-sm border border-blue-50">
@@ -54,7 +57,7 @@ const ActiveTreatmentCard = ({ reminders, onToggleReminder, medications }: Activ
         </div>
         <button className="w-full mt-4 py-3 border-2 border-dashed border-blue-200 rounded-xl flex items-center justify-center gap-2 text-[#4A90E2] text-sm font-bold bg-white/50 hover:bg-white transition-colors">
           <CheckCircle2 size={18} />
-          Log Daily Usage
+          {t.activeTreatment.logDailyUsage}
         </button>
       </div>
     </FadeInCard>

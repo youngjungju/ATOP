@@ -4,12 +4,14 @@ import React, { useState } from 'react';
 import FadeInCard from './FadeInCard';
 import SeverityScale from './SeverityScale';
 import { DIAGNOSIS_DATA } from './mockData';
+import { useTranslation } from '@/lib/i18n';
 
 interface SymptomBreakdownCardProps {
   description?: string;
 }
 
 const SymptomBreakdownCard = ({ description }: SymptomBreakdownCardProps) => {
+  const { t } = useTranslation();
   const [values, setValues] = useState<Record<number, number>>(
     () => Object.fromEntries(DIAGNOSIS_DATA.metrics.map((m, i) => [i, m.value]))
   );
@@ -20,7 +22,7 @@ const SymptomBreakdownCard = ({ description }: SymptomBreakdownCardProps) => {
 
   return (
     <FadeInCard delay={0.2}>
-      <h2 className="text-sm font-bold text-gray-400 uppercase mb-6 tracking-tight">Symptom Breakdown</h2>
+      <h2 className="text-sm font-bold text-gray-400 uppercase mb-6 tracking-tight">{t.symptomBreakdown.title}</h2>
       <div className="space-y-12 mb-8">
         {DIAGNOSIS_DATA.metrics.map((metric, i) => (
           <div key={i} className="flex flex-col gap-1">
