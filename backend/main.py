@@ -188,6 +188,9 @@ def extract_visual_observations(image_bytes: bytes, processor, model, device: st
 - 일반적_설명에는 의학적 용어를 사용하지 않고 일상적인 의미에서 설명해야 합니다.
 - 한계에는 이미지 분석의 한계를 명확히 작성해야 합니다.
 - 면책문구에는 이것이 의학적 진단이 아님을 분명히 명시해야 합니다.
+- 한국말로 작성해야 합니다.
+- 출력 형식 (JSON ONLY)만 출력해야 합니다.
+- 사진 속 인물의 피부만 분석하십시오. 피부를 감지하지 못하면 “피부를 감지하지 못했습니다”라고 말하십시오.
 """
     inputs = processor(images=image, text=prompt, return_tensors="pt")
     inputs = _prepare_inputs(inputs, device, model)
