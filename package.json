@@ -11,7 +11,10 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.95.3",
+<<<<<<< HEAD
     "framer-motion": "^12.33.0",
+=======
+>>>>>>> 1fd8caa97d93d8ce8341681d6ce549ea33007948
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
     "react": "19.2.3",
