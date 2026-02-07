@@ -8,4 +8,5 @@ export { default as DiagnosisSummaryCard } from './DiagnosisSummaryCard';
 export { default as SymptomBreakdownCard } from './SymptomBreakdownCard';
 export { default as ClinicalReferralCard } from './ClinicalReferralCard';
 export { default as FloatingSearchButton } from './FloatingSearchButton';
+export { default as BottomSheetDialog } from './BottomSheetDialog';
 export { DIAGNOSIS_DATA } from './mockData';
