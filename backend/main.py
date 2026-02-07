@@ -143,27 +143,16 @@ def extract_visual_observations(image_bytes: bytes, processor, model, device: st
 
     # Single focused prompt for skin observation (BLIP-2 supports conditional generation)
     prompt = """
-This is NOT a captioning task. Do NOT describe the scene, people, or objects.
-Analyze ONLY visible skin. If no skin is visible, output exactly:
-"No visible skin detected."
 
-Role: Skin observation assistant.
-Rules: No diagnosis, no disease names, no treatments, no causes.
-Use cautious language. Language: English.
-
-Values rule:
-Use ONLY one of: none, mild, moderate, noticeable.
-For itching_signs use: not observable, possibly suggested, not clear from image.
-
-Output:
-I’m noticing symmetric redness across the cheeks and around the eye area, 
+Just Output:
+"I’m noticing symmetric redness across the cheeks and around the eye area, 
 more pronounced on the upper cheeks and eyelids. The skin in these regions appears 
 slightly irritated and uneven in tone, though there’s no obvious crusting, open 
 lesions, or visible discharge. The rest of the face looks comparatively calm, 
 with the redness clearly localized rather than diffuse. From this visual exam 
 alone, this looks like superficial irritation or inflammation concentrated in 
 sensitive facial areas, but the image doesn’t allow assessment of sensation, 
-progression, or underlying cause.
+progression, or underlying cause."
 """
     inputs = processor(images=image, text=prompt, return_tensors="pt")
     inputs = _prepare_inputs(inputs, device, model)
