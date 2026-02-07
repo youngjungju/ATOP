@@ -1,80 +1,76 @@
 import Link from "next/link";
+import { Shield, Upload, Lock, CircleCheckBig, MessageCircleHeart } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900">
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-12 px-6 py-16">
-        <header className="flex flex-col gap-6">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-500">
-            Skin Observation Report
-          </p>
-          <h1 className="text-4xl font-semibold leading-tight md:text-5xl">
-            진단이 아닌 관찰로,
-            <br />
-            의사와의 대화를 더 쉽게 만듭니다.
-          </h1>
-          <p className="max-w-2xl text-lg text-zinc-600">
-            피부 사진과 복용 기록을 기반으로 AI가 시각적 특징을 요약합니다.
-            판단이나 처방 없이, 전달하기 쉬운 언어로 정리합니다.
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Link
-              className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800"
-              href="/upload"
-            >
-              지금 관찰 리포트 만들기
-            </Link>
-            <Link
-              className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-6 py-3 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-50"
-              href="/ui-prototype"
-            >
-              UI sample
-            </Link>
-          </div>
-          <div className="rounded-full border border-zinc-200 px-6 py-3 text-sm text-zinc-600 w-fit">
-            의료 진단이 아닌 관찰 요약입니다.
-          </div>
-        </header>
+    <section className="hero-bg px-4 py-20">
+      {/* Background decorative shapes */}
+      <div className="hero-shape hero-shape-1" />
+      <div className="hero-shape hero-shape-2" />
 
-        <section className="grid gap-6 md:grid-cols-3">
-          {[
-            {
-              title: "사진 기반 요약",
-              body: "붉은기, 건조해 보이는 영역, 표면 질감 등 눈에 보이는 특징만 서술합니다.",
-            },
-            {
-              title: "복용 기록 정리",
-              body: "사용자가 입력한 약 정보를 사실 기록으로만 요약합니다.",
-            },
-            {
-              title: "의료 오해 방지",
-              body: "진단/처방/치료 제안 없이 관찰 결과만 제공합니다.",
-            },
-          ].map((item) => (
-            <div
-              key={item.title}
-              className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
-            >
-              <h3 className="text-base font-semibold">{item.title}</h3>
-              <p className="mt-2 text-sm text-zinc-600">{item.body}</p>
+      <div className="relative z-10 mx-auto w-full max-w-4xl text-center">
+        {/* Badge */}
+        <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-700">
+          <Shield className="h-4 w-4" />
+          AI-Powered Skin Care Support
+        </div>
+
+        {/* Heading */}
+        <h1 className="mb-6 text-4xl font-bold tracking-tight text-slate-900 md:text-6xl">
+          Clearer skin starts with
+          <br />
+          <span className="text-emerald-600">understanding.</span>
+        </h1>
+
+        {/* Subtitle */}
+        <p className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-slate-600 md:text-xl">
+          Take a clear photo of your skin concern for a detailed analysis and
+          supportive report. We&rsquo;re here to help you manage your journey
+          with confidence.
+        </p>
+
+        {/* Upload CTA Card */}
+        <div className="mx-auto max-w-md">
+          <Link
+            href="/report/demo"
+            className="upload-card block cursor-pointer rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-white/80 p-8 backdrop-blur-sm transition-colors hover:border-emerald-400 md:p-12"
+          >
+            <div className="flex flex-col items-center">
+              {/* Pulsing upload icon */}
+              <div className="pulse-soft mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50">
+                <Upload className="h-10 w-10 text-emerald-500" />
+              </div>
+
+              <h3 className="mb-2 text-xl font-semibold text-slate-800">
+                Upload a Photo
+              </h3>
+              <p className="mb-6 text-sm text-slate-500">
+                JPEG, PNG or HEIC files up to 10MB
+              </p>
+
+              <span className="inline-block rounded-full bg-emerald-600 px-8 py-3 font-semibold text-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700">
+                Get Started
+              </span>
             </div>
-          ))}
-        </section>
+          </Link>
+        </div>
 
-        <section className="rounded-3xl border border-zinc-200 bg-white p-8">
-          <h2 className="text-xl font-semibold">데모 흐름</h2>
-          <ol className="mt-4 grid gap-3 text-sm text-zinc-600 md:grid-cols-2">
-            <li>1. 사진 업로드</li>
-            <li>2. 복용/사용 중인 약 입력</li>
-            <li>3. AI 시각적 관찰 요약 생성</li>
-            <li>4. 리포트 화면 확인</li>
-          </ol>
-          <p className="mt-6 text-xs text-zinc-500">
-            본 서비스는 의료 진단이 아니며, 사진과 사용자 기록에 기반한 시각적
-            관찰 요약입니다.
-          </p>
-        </section>
-      </main>
-    </div>
+        {/* Trust Markers */}
+        <div className="mt-16 flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+          <div className="flex items-center gap-2">
+            <Lock className="h-5 w-5" />
+            Secure &amp; Private
+          </div>
+          <div className="flex items-center gap-2">
+            <CircleCheckBig className="h-5 w-5" />
+            Instant Results
+          </div>
+          <div className="flex items-center gap-2">
+            <MessageCircleHeart className="h-5 w-5" />
+            Patient-First Design
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

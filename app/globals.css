@@ -12,15 +12,67 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Hero section */
+.hero-bg {
+  background: radial-gradient(circle at top left, #e0f2fe 0%, #f0fdf4 40%, #ffffff 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Abstract decorative blurred shapes */
+.hero-shape {
+  position: absolute;
+  filter: blur(80px);
+  z-index: 0;
+  opacity: 0.6;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.hero-shape-1 {
+  width: 400px;
+  height: 400px;
+  background: #dcfce7;
+  top: -100px;
+  right: -100px;
+}
+
+.hero-shape-2 {
+  width: 300px;
+  height: 300px;
+  background: #e0f2fe;
+  bottom: -50px;
+  left: -50px;
+}
+
+/* Upload card hover */
+.upload-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.upload-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Soft pulse animation */
+@keyframes pulse-soft {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.9; }
+}
+
+.pulse-soft {
+  animation: pulse-soft 3s ease-in-out infinite;
 }
