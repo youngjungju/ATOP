@@ -1,74 +1,122 @@
-import Link from "next/link";
+"use client";
+
+import { useRef } from "react";
+import { useRouter } from "next/navigation";
+import { Shield, Upload, Lock, CircleCheckBig, MessageCircleHeart } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
+
+const ACCEPTED_TYPES = "image/heic,image/heif,image/png,image/jpg,image/jpeg";
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export default function Home() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  const { t } = useTranslation();
+
+  const handleCardClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      alert(t.home.fileTooLarge);
+      return;
+    }
+
+    // Convert file to base64 and store in sessionStorage so the upload page
+    // can pick it up and pre-populate the preview.
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      sessionStorage.setItem("pending-upload", JSON.stringify({
+        name: file.name,
+        type: file.type,
+        data: base64,
+      }));
+      router.push("/upload");
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900">
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-12 px-6 py-16">
-        <header className="flex flex-col gap-6">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-500">
-            Skin Observation Report
-          </p>
-          <h1 className="text-4xl font-semibold leading-tight md:text-5xl">
-            진단이 아닌 관찰로,
-            <br />
-            의사와의 대화를 더 쉽게 만듭니다.
-          </h1>
-          <p className="max-w-2xl text-lg text-zinc-600">
-            피부 사진과 복용 기록을 기반으로 AI가 시각적 특징을 요약합니다.
-            판단이나 처방 없이, 전달하기 쉬운 언어로 정리합니다.
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Link
-              className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800"
-              href="/upload"
-            >
-              지금 관찰 리포트 만들기
-            </Link>
-            <div className="rounded-full border border-zinc-200 px-6 py-3 text-sm text-zinc-600">
-              의료 진단이 아닌 관찰 요약입니다.
+    <section className="hero-bg px-4 py-20">
+      {/* Background decorative shapes */}
+      <div className="hero-shape hero-shape-1" />
+      <div className="hero-shape hero-shape-2" />
+
+      <div className="relative z-10 mx-auto w-full max-w-4xl text-center">
+        {/* Badge */}
+        <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-700">
+          <Shield className="h-4 w-4" />
+          {t.home.badge}
+        </div>
+
+        {/* Heading */}
+        <h1 className="mb-6 text-4xl font-bold tracking-tight text-slate-900 md:text-6xl">
+          {t.home.headingLine1}
+          <br />
+          <span className="text-emerald-600">{t.home.headingLine2}</span>
+        </h1>
+
+        {/* Subtitle */}
+        <p className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-slate-600 md:text-xl">
+          {t.home.subtitle}
+        </p>
+
+        {/* Upload CTA Card */}
+        <div className="mx-auto max-w-md">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED_TYPES}
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <button
+            type="button"
+            onClick={handleCardClick}
+            className="upload-card block w-full cursor-pointer rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-white/80 p-8 backdrop-blur-sm transition-colors hover:border-emerald-400 md:p-12"
+          >
+            <div className="flex flex-col items-center">
+              {/* Pulsing upload icon */}
+              <div className="pulse-soft mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50">
+                <Upload className="h-10 w-10 text-emerald-500" />
+              </div>
+
+              <h3 className="mb-2 text-xl font-semibold text-slate-800">
+                {t.home.uploadTitle}
+              </h3>
+              <p className="mb-6 text-sm text-slate-500">
+                {t.home.uploadHint}
+              </p>
+
+              <span className="inline-block rounded-full bg-emerald-600 px-8 py-3 font-semibold text-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700">
+                {t.home.getStarted}
+              </span>
             </div>
+          </button>
+        </div>
+
+        {/* Trust Markers */}
+        <div className="mt-16 flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+          <div className="flex items-center gap-2">
+            <Lock className="h-5 w-5" />
+            {t.home.trustSecure}
           </div>
-        </header>
-
-        <section className="grid gap-6 md:grid-cols-3">
-          {[
-            {
-              title: "사진 기반 요약",
-              body: "붉은기, 건조해 보이는 영역, 표면 질감 등 눈에 보이는 특징만 서술합니다.",
-            },
-            {
-              title: "복용 기록 정리",
-              body: "사용자가 입력한 약 정보를 사실 기록으로만 요약합니다.",
-            },
-            {
-              title: "의료 오해 방지",
-              body: "진단/처방/치료 제안 없이 관찰 결과만 제공합니다.",
-            },
-          ].map((item) => (
-            <div
-              key={item.title}
-              className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
-            >
-              <h3 className="text-base font-semibold">{item.title}</h3>
-              <p className="mt-2 text-sm text-zinc-600">{item.body}</p>
-            </div>
-          ))}
-        </section>
-
-        <section className="rounded-3xl border border-zinc-200 bg-white p-8">
-          <h2 className="text-xl font-semibold">데모 흐름</h2>
-          <ol className="mt-4 grid gap-3 text-sm text-zinc-600 md:grid-cols-2">
-            <li>1. Upload skin photo</li>
-            <li>2. Enter medications, symptoms, duration</li>
-            <li>3. BLIP-2 visual analysis + report generation</li>
-            <li>4. View structured report with disclaimer</li>
-          </ol>
-          <p className="mt-6 text-xs text-zinc-500">
-            본 서비스는 의료 진단이 아니며, 사진과 사용자 기록에 기반한 시각적
-            관찰 요약입니다.
-          </p>
-        </section>
-      </main>
-    </div>
+          <div className="flex items-center gap-2">
+            <CircleCheckBig className="h-5 w-5" />
+            {t.home.trustInstant}
+          </div>
+          <div className="flex items-center gap-2">
+            <MessageCircleHeart className="h-5 w-5" />
+            {t.home.trustPatient}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
